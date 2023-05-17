@@ -15,9 +15,9 @@ class Project(models.Model):
         (ANDROID, 'Android'),
     )
 
-    title = models.CharField()
-    description = models.CharField()
-    type = models.CharField()
+    title = models.CharField(max_length=128)
+    description = models.CharField(max_length=2048)
+    type = models.CharField(max_length=30, choices=TYPE_CHOICES)
 
 
 class Issue(models.Model):
@@ -52,22 +52,31 @@ class Issue(models.Model):
         (DONE, 'Fait')
     )
 
-    title = models.CharField()
-    description = models.CharField()
-    tag = models.CharField(choices=TAG_CHOICES)
-    priority = models.CharField(choices=PRIORITY_CHOICES)
+    title = models.CharField(max_length=128)
+    description = models.CharField(max_length=2048)
+    tag = models.CharField(max_length=30, choices=TAG_CHOICES)
+    priority = models.CharField(max_length=30, choices=PRIORITY_CHOICES)
     project_id = models.ForeignKey(to=Project, on_delete=models.CASCADE)
-    status = models.CharField(choices=STATUS_CHOICES)
-    author_user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL)
-    assignee_user_id = models.ForeignKey(to=settings.AUTH_UER_MODEL)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    author_user_id = models.ForeignKey(
+        null=True,
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='%(class)s_author_related'
+    )
+    assignee_user_id = models.ForeignKey(
+        null=True,
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='%(class)s_assignees_related')
     created_time = models.DateTimeField()
 
 
 class Comment(models.Model):
-    description = models.CharField()
-    author_user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL)
+    description = models.CharField(max_length=2048)
+    author_user_id = models.ForeignKey(null=True, to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL)
     issue_id = models.ForeignKey(to=Issue, on_delete=models.CASCADE)
-    created_time = models.DateTimeField
+    created_time = models.DateTimeField()
 
 
 class Contributor(models.Model):
@@ -83,7 +92,7 @@ class Contributor(models.Model):
 
     user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project_id = models.ForeignKey(to=Project, on_delete=models.CASCADE)
-    permission = models.TextChoices()
-    role = models.charField()
+    permission = models.CharField(max_length=30, choices=PERMISSION_CHOICES)
+    role = models.CharField(max_length=30)
 
 
