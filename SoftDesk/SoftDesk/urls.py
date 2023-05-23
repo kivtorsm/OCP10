@@ -22,13 +22,17 @@ from django.conf.urls.static import static
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from issues.views import ProjectViewset
+from issues.views import ProjectViewset, IssueViewset, CommentViewset, ContributorViewset
 from authentication.views import MyObtainTokenPairView, SignUpView
 
 
 router = routers.SimpleRouter()
 
-router.register('project', ProjectViewset, basename='project')
+router.register('projects', ProjectViewset, basename='projects')
+router.register('issues', IssueViewset, basename='issues')
+router.register('comments', CommentViewset, basename='comments')
+router.register('contributors', ContributorViewset, basename='contributors')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),

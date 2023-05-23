@@ -3,7 +3,7 @@ from django.conf import settings
 
 
 class Project(models.Model):
-    BACK_END = 'BACK-END'
+    BACK_END = 'BACK_END'
     FRONT_END = 'FRONT_END'
     IOS = 'IOS'
     ANDROID = 'ANDROID'
@@ -69,29 +69,34 @@ class Issue(models.Model):
         to=settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         related_name='%(class)s_assignees_related')
-    created_time = models.DateTimeField()
+    created_time = models.DateTimeField(auto_now_add=True)
 
 
 class Comment(models.Model):
     description = models.CharField(max_length=2048)
-    author_user_id = models.ForeignKey(null=True, to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL)
+    author_user_id = models.ForeignKey(
+        null=True,
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='author'
+    )
     issue_id = models.ForeignKey(to=Issue, on_delete=models.CASCADE)
-    created_time = models.DateTimeField()
+    created_time = models.DateTimeField(auto_now_add=True)
 
 
 class Contributor(models.Model):
     AUTHOR = 'AUTHOR'
     MANAGER = 'MANAGER'
-    CREATOR = 'CREATOR'
+    CONTRIBUTOR = 'CONTRIBUTOR'
 
     PERMISSION_CHOICES = (
         (AUTHOR, 'Auteur'),
         (MANAGER, 'Responsable'),
-        (CREATOR, 'Créateur'),
+        (CONTRIBUTOR, 'Contributeur'),
     )
 
     user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    project_id = models.ForeignKey(to=Project, on_delete=models.CASCADE)
+    project_id = models.ForeignKey(to=Project, on_delete=models.CASCADE, related_name='contributors')
     permission = models.CharField(max_length=30, choices=PERMISSION_CHOICES)
     role = models.CharField(max_length=30)
 

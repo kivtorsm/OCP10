@@ -1,13 +1,26 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
-from issues.models import Project, Issue, Comment
+from issues.models import Project, Issue, Comment, Contributor
+
+
+class ContributorSerializer(ModelSerializer):
+
+    class Meta:
+        model = Contributor
+        fields = ['id', 'project_id', 'user_id', 'permission', 'role']
 
 
 class ProjectSerializer(ModelSerializer):
+    contributors = SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'title', 'type', 'description']
+        fields = ['id', 'title', 'type', 'description', 'contributors']
+
+    def get_contributors(self, instance):
+        queryset = instance.contributors.all()
+        serializer = ContributorSerializer(queryset, many=True)
+        return serializer.data
 
 
 class IssueSerializer(ModelSerializer):
@@ -22,3 +35,6 @@ class CommentSerializer(ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'description', 'author_user_id', 'issue_id', 'created_time']
+
+
+
