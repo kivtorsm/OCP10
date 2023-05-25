@@ -105,18 +105,29 @@ class ProjectIssueCommentViewset(ModelViewSet):
     )
     # lookup_field = 'pk'
     serializer_class = CommentSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
-    def list(self, request, project_pk=None, issue_pk=None):
-        queryset = Comment.objects.filter(issue_id__project_id=project_pk, issue_id=issue_pk)
-        serializer = CommentSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def create(self, request, issue_pk=None, project_pk=None):
+        issue = get_object_or_404(Issue, id=issue_pk)
+        user = get_object_or_404(User, id=request.user.id)
 
-    def retrieve(self, request, pk=None, project_pk=None, issue_pk=None):
-        queryset = Comment.objects.filter(id=pk, issue_id=issue_pk, issue_id__project_id=project_pk)
-        comment = get_object_or_404(queryset, id=pk)
-        serializer = CommentSerializer(comment)
-        return Response(serializer.data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(issue_id=issue, author_user_id=user)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # def list(self, request, project_pk=None, issue_pk=None):
+    #     queryset = Comment.objects.filter(issue_id__project_id=project_pk, issue_id=issue_pk)
+    #     serializer = CommentSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+    #
+    # def retrieve(self, request, pk=None, project_pk=None, issue_pk=None):
+    #     queryset = Comment.objects.filter(id=pk, issue_id=issue_pk, issue_id__project_id=project_pk)
+    #     comment = get_object_or_404(queryset, id=pk)
+    #     serializer = CommentSerializer(comment)
+    #     return Response(serializer.data)
 
     def get_queryset(self, *args, **kwargs):
         issue_id = self.kwargs.get("issue_pk")
