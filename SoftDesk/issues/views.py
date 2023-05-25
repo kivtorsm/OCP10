@@ -14,8 +14,6 @@ from authentication.models import User
 class ProjectViewset(ModelViewSet):
 
     serializer_class = ProjectSerializer
-    # detail_serializer_class = ProjectDetailSerializer
-    # lookup_field = 'pk'
     # permission_classes = [IsAuthenticated]
 
     def list(self, request):
@@ -55,7 +53,6 @@ class ProjectIssueViewset(ModelViewSet):
     queryset = Issue.objects.all().select_related(
         'project_id'
     )
-    # lookup_field = 'pk'
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated]
 
@@ -69,17 +66,6 @@ class ProjectIssueViewset(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    # def list(self, request, project_pk=None):
-    #     queryset = Issue.objects.filter(project_id=project_pk)
-    #     serializer = IssueSerializer(queryset, many=True)
-    #     return Response(serializer.data)
-    #
-    # def retrieve(self, request, pk=None, project_pk=None):
-    #     queryset = Issue.objects.filter(id=pk, project_id=project_pk)
-    #     issue = get_object_or_404(queryset, id=pk)
-    #     serializer = IssueSerializer(issue)
-    #     return Response(serializer.data)
 
     def get_queryset(self, *args, **kwargs):
         project_id = self.kwargs.get("project_pk")
@@ -103,7 +89,6 @@ class ProjectIssueCommentViewset(ModelViewSet):
     queryset = Comment.objects.all().select_related(
         'issue_id'
     )
-    # lookup_field = 'pk'
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
 
@@ -117,17 +102,6 @@ class ProjectIssueCommentViewset(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    # def list(self, request, project_pk=None, issue_pk=None):
-    #     queryset = Comment.objects.filter(issue_id__project_id=project_pk, issue_id=issue_pk)
-    #     serializer = CommentSerializer(queryset, many=True)
-    #     return Response(serializer.data)
-    #
-    # def retrieve(self, request, pk=None, project_pk=None, issue_pk=None):
-    #     queryset = Comment.objects.filter(id=pk, issue_id=issue_pk, issue_id__project_id=project_pk)
-    #     comment = get_object_or_404(queryset, id=pk)
-    #     serializer = CommentSerializer(comment)
-    #     return Response(serializer.data)
 
     def get_queryset(self, *args, **kwargs):
         issue_id = self.kwargs.get("issue_pk")
@@ -144,7 +118,6 @@ class ProjectContributorViewset(ModelViewSet):
     queryset = Contributor.objects.all().select_related(
         'project_id'
     )
-    lookup_field = 'id'
     # permission_classes = [IsAuthenticated]
 
     def get_queryset(self, *args, **kwargs):
@@ -166,13 +139,3 @@ class ProjectContributorViewset(ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    # def list(self, request, project_pk=None):
-    #     queryset = Contributor.objects.filter(project_id=project_pk)
-    #     serializer = ContributorSerializer(queryset, many=True)
-    #     return Response(serializer.data)
-    #
-    # def retrieve(self, request, pk=None, project_pk=None):
-    #     queryset = Comment.objects.filter(id=pk, project_id=project_pk)
-    #     contributor = get_object_or_404(queryset, id=pk)
-    #     serializer = CommentSerializer(contributor)
-    #     return Response(serializer.data)
