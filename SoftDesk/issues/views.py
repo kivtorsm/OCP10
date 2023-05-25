@@ -1,3 +1,4 @@
+from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -7,12 +8,14 @@ from rest_framework.permissions import IsAuthenticated
 from issues.models import Project, Issue, Comment, Contributor
 from issues.serializers import ProjectSerializer, IssueSerializer, CommentSerializer, ContributorSerializer
 
+from authentication.models import User
+
 
 class ProjectViewset(ModelViewSet):
 
     serializer_class = ProjectSerializer
     # detail_serializer_class = ProjectDetailSerializer
-    lookup_field = 'pk'
+    # lookup_field = 'pk'
     # permission_classes = [IsAuthenticated]
 
     def list(self, request):
@@ -52,7 +55,7 @@ class ProjectIssueViewset(ModelViewSet):
     queryset = Issue.objects.all().select_related(
         'project_id'
     )
-    lookup_field = 'pk'
+    # lookup_field = 'pk'
     serializer_class = IssueSerializer
     # permission_classes = [IsAuthenticated]
 
@@ -89,7 +92,7 @@ class ProjectIssueCommentViewset(ModelViewSet):
     queryset = Comment.objects.all().select_related(
         'issue_id'
     )
-    lookup_field = 'pk'
+    # lookup_field = 'pk'
     serializer_class = CommentSerializer
     # permission_classes = [IsAuthenticated]
 
@@ -122,7 +125,6 @@ class ProjectContributorViewset(ModelViewSet):
     lookup_field = 'id'
     # permission_classes = [IsAuthenticated]
 
-
     def get_queryset(self, *args, **kwargs):
         project_id = self.kwargs.get("project_pk")
         try:
@@ -131,3 +133,24 @@ class ProjectContributorViewset(ModelViewSet):
             raise NotFound('A project with this id does not exist')
         return self.queryset.filter(project_id=project)
 
+    def create(self, request, project_pk=None):
+        project = get_object_or_404(Project, id=project_pk)
+        user = get_object_or_404(User, id=request.data['user_id'])
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(project_id=project, user_id=user)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # def list(self, request, project_pk=None):
+    #     queryset = Contributor.objects.filter(project_id=project_pk)
+    #     serializer = ContributorSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+    #
+    # def retrieve(self, request, pk=None, project_pk=None):
+    #     queryset = Comment.objects.filter(id=pk, project_id=project_pk)
+    #     contributor = get_object_or_404(queryset, id=pk)
+    #     serializer = CommentSerializer(contributor)
+    #     return Response(serializer.data)

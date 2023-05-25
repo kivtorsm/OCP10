@@ -1,27 +1,24 @@
+from rest_framework import status
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, HyperlinkedModelSerializer
 from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
 
 from issues.models import Project, Issue, Comment, Contributor
 
 
-class ContributorSerializer(ModelSerializer):
-
-    class Meta:
-        model = Contributor
-        fields = ['id', 'project_id', 'user_id', 'permission', 'role']
-
-
 class ProjectSerializer(ModelSerializer):
-    contributors = SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'title', 'type', 'description', 'contributors']
+        fields = ['id', 'title', 'type', 'description']
 
-    def get_contributors(self, instance):
-        queryset = instance.contributors.all()
-        serializer = ContributorSerializer(queryset, many=True)
-        return serializer.data
+
+class ContributorSerializer(ModelSerializer):
+    class Meta:
+        model = Contributor
+        fields = ['id', 'project_id', 'user_id', 'permission', 'role']
+        read_only_fields = ['project_id', 'user_id']
 
 
 class IssueSerializer(ModelSerializer):
@@ -45,10 +42,10 @@ class IssueSerializer(ModelSerializer):
 
 
 class CommentSerializer(ModelSerializer):
-    parent_lookup_kwargs = {
-        'issue_id': 'issue_id',
-        'project_id': 'project_id'
-    }
+    # parent_lookup_kwargs = {
+    #     'issue_id': 'issue_id',
+    #     'project_id': 'project_id'
+    # }
 
     class Meta:
         model = Comment
