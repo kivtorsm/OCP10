@@ -57,18 +57,29 @@ class ProjectIssueViewset(ModelViewSet):
     )
     # lookup_field = 'pk'
     serializer_class = IssueSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
-    def list(self, request, project_pk=None):
-        queryset = Issue.objects.filter(project_id=project_pk)
-        serializer = IssueSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def create(self, request, project_pk=None):
+        project = get_object_or_404(Project, id=project_pk)
+        user = get_object_or_404(User, id=request.user.id)
 
-    def retrieve(self, request, pk=None, project_pk=None):
-        queryset = Issue.objects.filter(id=pk, project_id=project_pk)
-        issue = get_object_or_404(queryset, id=pk)
-        serializer = IssueSerializer(issue)
-        return Response(serializer.data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(project_id=project, author_user_id=user)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # def list(self, request, project_pk=None):
+    #     queryset = Issue.objects.filter(project_id=project_pk)
+    #     serializer = IssueSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+    #
+    # def retrieve(self, request, pk=None, project_pk=None):
+    #     queryset = Issue.objects.filter(id=pk, project_id=project_pk)
+    #     issue = get_object_or_404(queryset, id=pk)
+    #     serializer = IssueSerializer(issue)
+    #     return Response(serializer.data)
 
     def get_queryset(self, *args, **kwargs):
         project_id = self.kwargs.get("project_pk")
