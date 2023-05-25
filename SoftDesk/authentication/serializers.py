@@ -1,3 +1,4 @@
+from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -52,3 +53,10 @@ class SignUpSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class UserSerializer(ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']

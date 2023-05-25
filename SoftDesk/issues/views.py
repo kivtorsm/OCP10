@@ -1,4 +1,6 @@
-from rest_framework.fields import CurrentUserDefault
+from rest_framework.exceptions import NotFound
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 
@@ -10,7 +12,19 @@ class ProjectViewset(ModelViewSet):
 
     serializer_class = ProjectSerializer
     # detail_serializer_class = ProjectDetailSerializer
-    permission_classes = [IsAuthenticated]
+    lookup_field = 'pk'
+    # permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        queryset = Project.objects.filter()
+        serializer = ProjectSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = Project.objects.filter()
+        project = get_object_or_404(queryset, pk=pk)
+        serializer = ProjectSerializer(project)
+        return Response(serializer.data)
 
     def get_queryset(self):
         user_is_contributor_in = Contributor.objects.filter(user_id=self.request.user.id)
@@ -28,25 +42,92 @@ class ProjectViewset(ModelViewSet):
 class IssueViewset(ModelViewSet):
 
     serializer_class = IssueSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Issue.objects.all()
 
 
+class ProjectIssueViewset(ModelViewSet):
+    queryset = Issue.objects.all().select_related(
+        'project_id'
+    )
+    lookup_field = 'pk'
+    serializer_class = IssueSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def list(self, request, project_pk=None):
+        queryset = Issue.objects.filter(project_id=project_pk)
+        serializer = IssueSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, project_pk=None):
+        queryset = Issue.objects.filter(id=pk, project_id=project_pk)
+        issue = get_object_or_404(queryset, id=pk)
+        serializer = IssueSerializer(issue)
+        return Response(serializer.data)
+
+    def get_queryset(self, *args, **kwargs):
+        project_id = self.kwargs.get("project_pk")
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            raise NotFound('A project with this id does not exist')
+        return self.queryset.filter(project_id=project)
+
+
 class CommentViewset(ModelViewSet):
 
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Comment.objects.all()
 
 
-class ContributorViewset(ModelViewSet):
+class ProjectIssueCommentViewset(ModelViewSet):
+    queryset = Comment.objects.all().select_related(
+        'issue_id'
+    )
+    lookup_field = 'pk'
+    serializer_class = CommentSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def list(self, request, project_pk=None, issue_pk=None):
+        queryset = Comment.objects.filter(issue_id__project_id=project_pk, issue_id=issue_pk)
+        serializer = CommentSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, project_pk=None, issue_pk=None):
+        queryset = Comment.objects.filter(id=pk, issue_id=issue_pk, issue_id__project_id=project_pk)
+        comment = get_object_or_404(queryset, id=pk)
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data)
+
+    def get_queryset(self, *args, **kwargs):
+        issue_id = self.kwargs.get("issue_pk")
+        try:
+            issue = Issue.objects.get(id=issue_id)
+        except Issue.DoesNotExist:
+            raise NotFound(f'An issue with id {issue_id} does not exist')
+        return self.queryset.filter(issue_id=issue)
+
+
+class ProjectContributorViewset(ModelViewSet):
 
     serializer_class = ContributorSerializer
-    permission_classes = [IsAuthenticated]
+    queryset = Contributor.objects.all().select_related(
+        'project_id'
+    )
+    lookup_field = 'id'
+    # permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Contributor.objects.all()
+
+    def get_queryset(self, *args, **kwargs):
+        project_id = self.kwargs.get("project_pk")
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            raise NotFound('A project with this id does not exist')
+        return self.queryset.filter(project_id=project)
+

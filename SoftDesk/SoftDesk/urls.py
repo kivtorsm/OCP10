@@ -20,18 +20,57 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from rest_framework import routers
+from rest_framework_nested import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from issues.views import ProjectViewset, IssueViewset, CommentViewset, ContributorViewset
-from authentication.views import MyObtainTokenPairView, SignUpView
+from issues.views import ProjectViewset, ProjectIssueViewset, CommentViewset, ProjectContributorViewset, IssueViewset, ProjectIssueCommentViewset
+from authentication.views import MyObtainTokenPairView, SignUpView, UserViewset
 
-
+# project router -> /api/projects/{pk}
 router = routers.SimpleRouter()
 
 router.register('projects', ProjectViewset, basename='projects')
+
+# user nested router -> /api/projects/{pk}/users
+user_router = routers.NestedSimpleRouter(
+    router,
+    r'projects',
+    lookup='project'
+)
+user_router.register(
+    r'users',
+    ProjectContributorViewset,
+    basename='users'
+)
+
+# issue nested router -> # user router -> /api/projects/{pk}/issues/{pk}
+issue_router = routers.NestedSimpleRouter(
+    router,
+    r'projects',
+    lookup='project'
+)
+issue_router.register(
+    r'issues',
+    ProjectIssueViewset,
+    basename='issues'
+)
+
+# comment nested router -> # user router -> /api/projects/{pk}/issues/{pk}/comments/{pk}
+comment_router = routers.NestedSimpleRouter(
+    issue_router,
+    r'issues',
+    lookup='issue'
+)
+comment_router.register(
+    r'comments',
+    ProjectIssueCommentViewset,
+    basename='comments'
+)
+
+# other not nested routers
 router.register('issues', IssueViewset, basename='issues')
 router.register('comments', CommentViewset, basename='comments')
-router.register('contributors', ContributorViewset, basename='contributors')
+# router.register('contributors', ContributorViewset, basename='contributors')
 
 
 urlpatterns = [
@@ -41,6 +80,10 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/signup/', SignUpView.as_view(), name='signup'),
     path('api/', include(router.urls)),
+    path('api/', include(user_router.urls)),
+    path('api/', include(issue_router.urls)),
+    path('api/', include(comment_router.urls)),
+
 ]
 
 if settings.DEBUG:

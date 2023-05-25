@@ -1,4 +1,5 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, HyperlinkedModelSerializer
+from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
 
 from issues.models import Project, Issue, Comment, Contributor
 
@@ -24,13 +25,30 @@ class ProjectSerializer(ModelSerializer):
 
 
 class IssueSerializer(ModelSerializer):
+    parent_lookup_kwargs = {
+        'project_id': 'project_id',
+    }
 
     class Meta:
         model = Issue
-        fields = ['id', 'title', 'tag', 'priority', 'project_id', 'status', 'author_user_id', 'assignee_user_id', 'created_time']
+        fields = [
+            'id',
+            'title',
+            'tag',
+            'priority',
+            'project_id',
+            'status',
+            'author_user_id',
+            'assignee_user_id',
+            'created_time',
+        ]
 
 
 class CommentSerializer(ModelSerializer):
+    parent_lookup_kwargs = {
+        'issue_id': 'issue_id',
+        'project_id': 'project_id'
+    }
 
     class Meta:
         model = Comment
