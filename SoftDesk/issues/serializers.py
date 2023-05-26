@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, HyperlinkedModelSerializer
 from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
 
-from issues.models import Project, Issue, Comment, Contributor
+from .models import Project, Issue, Comment, Contributor
 
 
 class ProjectSerializer(ModelSerializer):
@@ -31,6 +31,7 @@ class IssueSerializer(ModelSerializer):
         fields = [
             'id',
             'title',
+            'description',
             'tag',
             'priority',
             'project_id',

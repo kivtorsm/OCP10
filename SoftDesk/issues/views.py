@@ -10,22 +10,42 @@ from issues.serializers import ProjectSerializer, IssueSerializer, CommentSerial
 
 from authentication.models import User
 
+from issues.permissions import IsOwnerOrReadOnly
+
 
 class ProjectViewset(ModelViewSet):
 
     serializer_class = ProjectSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
-    def list(self, request):
-        queryset = Project.objects.filter()
-        serializer = ProjectSerializer(queryset, many=True)
-        return Response(serializer.data)
+    # def list(self, request):
+    #     queryset = self.get_queryset()
+    #     if queryset==None:
+    #         response_status = status.HTTP_404
+    #     else:
+    #         serializer = ProjectSerializer(queryset, many=True)
+    #         headers = self.get_success_headers(serializer.data)
+    #         response_status = status.HTTP_200_OK
+    #     return Response(serializer.data, status=response_status, headers=headers)
 
-    def retrieve(self, request, pk=None):
-        queryset = Project.objects.filter()
-        project = get_object_or_404(queryset, pk=pk)
-        serializer = ProjectSerializer(project)
-        return Response(serializer.data)
+    #
+    def retrieve(self, request, pk=None, **kwargs):
+        queryset = self.get_queryset()
+        project = get_object_or_404(Project.objects.all(), pk=pk)
+        # project = get_object_or_404(queryset, pk=pk)
+
+        if project in queryset:
+            serializer = ProjectSerializer(project)
+            status_response = status.HTTP_200_OK
+            headers = self.get_success_headers(serializer.data)
+
+        else:
+            project = None
+            serializer = ProjectSerializer(project)
+            status_response = status.HTTP_401_UNAUTHORIZED
+            headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status_response, headers=headers)
 
     def get_queryset(self):
         user_is_contributor_in = Contributor.objects.filter(user_id=self.request.user.id)
@@ -56,7 +76,7 @@ class ProjectIssueViewset(ModelViewSet):
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, project_pk=None):
+    def create(self, request, project_pk=None, **kwargs):
         project = get_object_or_404(Project, id=project_pk)
         user = get_object_or_404(User, id=request.user.id)
 
@@ -92,7 +112,7 @@ class ProjectIssueCommentViewset(ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, issue_pk=None, project_pk=None):
+    def create(self, request, issue_pk=None, project_pk=None, **kwargs):
         issue = get_object_or_404(Issue, id=issue_pk)
         user = get_object_or_404(User, id=request.user.id)
 
@@ -111,6 +131,9 @@ class ProjectIssueCommentViewset(ModelViewSet):
             raise NotFound(f'An issue with id {issue_id} does not exist')
         return self.queryset.filter(issue_id=issue)
 
+    def get_object(self):
+        obj = get_object_or_404()
+
 
 class ProjectContributorViewset(ModelViewSet):
 
@@ -128,7 +151,7 @@ class ProjectContributorViewset(ModelViewSet):
             raise NotFound('A project with this id does not exist')
         return self.queryset.filter(project_id=project)
 
-    def create(self, request, project_pk=None):
+    def create(self, request, project_pk=None, **kwargs):
         project = get_object_or_404(Project, id=project_pk)
         user = get_object_or_404(User, id=request.data['user_id'])
 
@@ -138,4 +161,3 @@ class ProjectContributorViewset(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
