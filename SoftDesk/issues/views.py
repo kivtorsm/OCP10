@@ -141,7 +141,7 @@ class ProjectContributorViewset(ModelViewSet):
     queryset = Contributor.objects.all().select_related(
         'project_id'
     )
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self, *args, **kwargs):
         project_id = self.kwargs.get("project_pk")
@@ -161,3 +161,16 @@ class ProjectContributorViewset(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def dispatch(self, request, *args, **kwargs):
+        parent_view = ProjectViewset.as_view({"get": "retrieve"})
+        original_method = request.method
+        request.method = "GET"
+        parent_kwargs = {"id": kwargs["project_pk"]}
+
+        parent_response = parent_view(request, *args, **parent_kwargs)
+        if parent_response.exception:
+            return parent_response
+
+        request.method = original_method
+        return super().dispatch(request, *args, **kwargs)
