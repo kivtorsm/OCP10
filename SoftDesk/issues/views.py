@@ -117,6 +117,15 @@ class ProjectIssueViewset(ModelViewSet):
         request.method = original_method
         return super().dispatch(request, *args, **kwargs)
 
+    def get_object(self):
+
+        owner = get_object_or_404(
+            Contributor.objects.filter(
+                Q(project_id=self.kwargs['pk']) & Q(permission='AUTHOR')
+            )
+        )
+        return owner
+
 
 class CommentViewset(ModelViewSet):
 
