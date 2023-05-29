@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import get_object_or_404
@@ -32,7 +34,6 @@ class ProjectViewset(ModelViewSet):
     def retrieve(self, request, pk=None, **kwargs):
         queryset = self.get_queryset()
         project = get_object_or_404(Project.objects.all(), pk=pk)
-        # project = get_object_or_404(queryset, pk=pk)
 
         if project in queryset:
             serializer = ProjectSerializer(project)
@@ -58,6 +59,14 @@ class ProjectViewset(ModelViewSet):
         ]
         queryset = Project.objects.filter(id__in=project_id_list)
         return queryset
+
+    def get_object(self):
+        owner = get_object_or_404(
+            Contributor.objects.filter(
+                Q(project_id=self.kwargs['pk']) & Q(permission='AUTHOR')
+            )
+        )
+        return owner
 
 
 class IssueViewset(ModelViewSet):
@@ -95,6 +104,19 @@ class ProjectIssueViewset(ModelViewSet):
             raise NotFound('A project with this id does not exist')
         return self.queryset.filter(project_id=project)
 
+    def dispatch(self, request, *args, **kwargs):
+        parent_view = ProjectViewset.as_view({"get": "retrieve"})
+        original_method = request.method
+        request.method = "GET"
+        parent_kwargs = {"id": kwargs["project_pk"]}
+
+        parent_response = parent_view(request, *args, **parent_kwargs)
+        if parent_response.exception:
+            return parent_response
+
+        request.method = original_method
+        return super().dispatch(request, *args, **kwargs)
+
 
 class CommentViewset(ModelViewSet):
 
@@ -131,8 +153,21 @@ class ProjectIssueCommentViewset(ModelViewSet):
             raise NotFound(f'An issue with id {issue_id} does not exist')
         return self.queryset.filter(issue_id=issue)
 
-    def get_object(self):
-        obj = get_object_or_404()
+    # def get_object(self):
+    #     obj = get_object_or_404()
+
+    def dispatch(self, request, *args, **kwargs):
+        parent_view = IssueViewset.as_view({"get": "retrieve"})
+        original_method = request.method
+        request.method = "GET"
+        parent_kwargs = {"pk": kwargs["issue_pk"]}
+
+        parent_response = parent_view(request, *args, **parent_kwargs)
+        if parent_response.exception:
+            return parent_response
+
+        request.method = original_method
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ProjectContributorViewset(ModelViewSet):
@@ -141,7 +176,7 @@ class ProjectContributorViewset(ModelViewSet):
     queryset = Contributor.objects.all().select_related(
         'project_id'
     )
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self, *args, **kwargs):
         project_id = self.kwargs.get("project_pk")
@@ -162,15 +197,15 @@ class ProjectContributorViewset(ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def dispatch(self, request, *args, **kwargs):
-        parent_view = ProjectViewset.as_view({"get": "retrieve"})
-        original_method = request.method
-        request.method = "GET"
-        parent_kwargs = {"id": kwargs["project_pk"]}
-
-        parent_response = parent_view(request, *args, **parent_kwargs)
-        if parent_response.exception:
-            return parent_response
-
-        request.method = original_method
-        return super().dispatch(request, *args, **kwargs)
+    # def dispatch(self, request, *args, **kwargs):
+    #     parent_view = ProjectViewset.as_view({"get": "retrieve"})
+    #     original_method = request.method
+    #     request.method = "GET"
+    #     parent_kwargs = {"id": kwargs["project_pk"]}
+    #
+    #     parent_response = parent_view(request, *args, **parent_kwargs)
+    #     if parent_response.exception:
+    #         return parent_response
+    #
+    #     request.method = original_method
+    #     return super().dispatch(request, *args, **kwargs)
