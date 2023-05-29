@@ -60,13 +60,21 @@ class ProjectViewset(ModelViewSet):
         queryset = Project.objects.filter(id__in=project_id_list)
         return queryset
 
-    def get_object(self):
-        owner = get_object_or_404(
-            Contributor.objects.filter(
-                Q(project_id=self.kwargs['pk']) & Q(permission='AUTHOR')
-            )
-        )
-        return owner
+    # def get_object(self):
+    #     owner = get_object_or_404(
+    #         Contributor.objects.filter(
+    #             Q(project_id=self.kwargs['pk']) & Q(permission='AUTHOR')
+    #         )
+    #     )
+    #     return owner
+
+    def create(self, request, pk=None, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(pk=pk)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class IssueViewset(ModelViewSet):
@@ -83,7 +91,7 @@ class ProjectIssueViewset(ModelViewSet):
         'project_id'
     )
     serializer_class = IssueSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def create(self, request, project_pk=None, **kwargs):
         project = get_object_or_404(Project, id=project_pk)
@@ -108,7 +116,7 @@ class ProjectIssueViewset(ModelViewSet):
         parent_view = ProjectViewset.as_view({"get": "retrieve"})
         original_method = request.method
         request.method = "GET"
-        parent_kwargs = {"id": kwargs["project_pk"]}
+        parent_kwargs = {"pk": kwargs["project_pk"]}
 
         parent_response = parent_view(request, *args, **parent_kwargs)
         if parent_response.exception:
@@ -116,15 +124,6 @@ class ProjectIssueViewset(ModelViewSet):
 
         request.method = original_method
         return super().dispatch(request, *args, **kwargs)
-
-    def get_object(self):
-
-        owner = get_object_or_404(
-            Contributor.objects.filter(
-                Q(project_id=self.kwargs['pk']) & Q(permission='AUTHOR')
-            )
-        )
-        return owner
 
 
 class CommentViewset(ModelViewSet):
@@ -141,7 +140,7 @@ class ProjectIssueCommentViewset(ModelViewSet):
         'issue_id'
     )
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def create(self, request, issue_pk=None, project_pk=None, **kwargs):
         issue = get_object_or_404(Issue, id=issue_pk)
