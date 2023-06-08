@@ -1,12 +1,10 @@
-from django.shortcuts import render
-
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 
-from .serializers import MyTokenObtainPairSerializer, SignUpSerializer, UserSerializer
-from .models import User
+from authentication.serializers import MyTokenObtainPairSerializer, SignUpSerializer, UserSerializer
+from authentication.models import User
 
 
 class MyObtainTokenPairView(TokenObtainPairView):
@@ -23,7 +21,7 @@ class SignUpView(generics.CreateAPIView):
 class UserViewset(ModelViewSet):
 
     serializer_class = UserSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return User.objects.all()
