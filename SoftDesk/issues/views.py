@@ -112,7 +112,7 @@ class ProjectIssueViewset(ModelViewSet):
         try:
             project = Project.objects.get(id=project_id)
         except Project.DoesNotExist:
-            raise NotFound('A project with this id does not exist')
+            raise NotFound(f'A project with id {project_id} does not exist')
         return self.queryset.filter(project_id=project)
 
     def dispatch(self, request, *args, **kwargs):
@@ -168,10 +168,13 @@ class ProjectIssueCommentViewset(ModelViewSet):
     #     obj = get_object_or_404()
 
     def dispatch(self, request, *args, **kwargs):
-        parent_view = IssueViewset.as_view({"get": "retrieve"})
+        parent_view = ProjectIssueViewset.as_view({"get": "retrieve"})
         original_method = request.method
         request.method = "GET"
-        parent_kwargs = {"pk": kwargs["issue_pk"]}
+        parent_kwargs = {
+            "pk": kwargs["issue_pk"],
+            "project_pk": kwargs["project_pk"]
+        }
 
         parent_response = parent_view(request, *args, **parent_kwargs)
         if parent_response.exception:
