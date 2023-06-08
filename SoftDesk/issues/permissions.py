@@ -5,6 +5,7 @@ from rest_framework.generics import get_object_or_404
 
 from issues.models import Contributor, Project
 
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow owners of an object to edit it
@@ -20,7 +21,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if isinstance(obj, Project):
             owner = get_object_or_404(
                 Contributor.objects.filter(
-                    Q(project_id=obj) & Q(permission='AUTHOR')
+                    Q(project_id=Project.objects.get(title=obj.title)) & Q(permission='AUTHOR')
                 )
             )
             return request.user == owner.user_id

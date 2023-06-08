@@ -18,7 +18,10 @@ from issues.permissions import IsOwnerOrReadOnly
 class ProjectViewset(ModelViewSet):
 
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [
+        IsAuthenticated,
+        # IsOwnerOrReadOnly
+    ]
 
     # def list(self, request):
     #     queryset = self.get_queryset()
@@ -205,15 +208,15 @@ class ProjectContributorViewset(ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    # def dispatch(self, request, *args, **kwargs):
-    #     parent_view = ProjectViewset.as_view({"get": "retrieve"})
-    #     original_method = request.method
-    #     request.method = "GET"
-    #     parent_kwargs = {"id": kwargs["project_pk"]}
-    #
-    #     parent_response = parent_view(request, *args, **parent_kwargs)
-    #     if parent_response.exception:
-    #         return parent_response
-    #
-    #     request.method = original_method
-    #     return super().dispatch(request, *args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        parent_view = ProjectViewset.as_view({"get": "retrieve"})
+        original_method = request.method
+        request.method = "GET"
+        parent_kwargs = {"id": kwargs["project_pk"]}
+
+        parent_response = parent_view(request, *args, **parent_kwargs)
+        if parent_response.exception:
+            return parent_response
+
+        request.method = original_method
+        return super().dispatch(request, *args, **kwargs)
