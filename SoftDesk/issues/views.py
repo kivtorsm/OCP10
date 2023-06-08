@@ -20,7 +20,7 @@ class ProjectViewset(ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [
         IsAuthenticated,
-        # IsOwnerOrReadOnly
+        IsOwnerOrReadOnly
     ]
 
     # def list(self, request):
@@ -80,13 +80,13 @@ class ProjectViewset(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class IssueViewset(ModelViewSet):
-
-    serializer_class = IssueSerializer
-    # permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Issue.objects.all()
+# class IssueViewset(ModelViewSet):
+#
+#     serializer_class = IssueSerializer
+#     # permission_classes = [IsAuthenticated]
+#
+#     def get_queryset(self):
+#         return Issue.objects.all()
 
 
 class ProjectIssueViewset(ModelViewSet):
@@ -129,13 +129,13 @@ class ProjectIssueViewset(ModelViewSet):
         return super().dispatch(request, *args, **kwargs)
 
 
-class CommentViewset(ModelViewSet):
-
-    serializer_class = CommentSerializer
-    # permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Comment.objects.all()
+# class CommentViewset(ModelViewSet):
+#
+#     serializer_class = CommentSerializer
+#     # permission_classes = [IsAuthenticated]
+#
+#     def get_queryset(self):
+#         return Comment.objects.all()
 
 
 class ProjectIssueCommentViewset(ModelViewSet):
@@ -212,7 +212,7 @@ class ProjectContributorViewset(ModelViewSet):
         parent_view = ProjectViewset.as_view({"get": "retrieve"})
         original_method = request.method
         request.method = "GET"
-        parent_kwargs = {"id": kwargs["project_pk"]}
+        parent_kwargs = {"pk": kwargs["project_pk"]}
 
         parent_response = parent_view(request, *args, **parent_kwargs)
         if parent_response.exception:
