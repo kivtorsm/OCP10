@@ -19,11 +19,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from rest_framework import routers
 from rest_framework_nested import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from issues.views import ProjectViewset, ProjectIssueViewset, CommentViewset, ProjectContributorViewset, IssueViewset, ProjectIssueCommentViewset
+from issues.views import ProjectViewset, ProjectIssueViewset, ProjectContributorViewset, ProjectIssueCommentViewset
 from authentication.views import MyObtainTokenPairView, SignUpView, UserViewset
 
 # project router -> /api/projects/{pk}
@@ -66,11 +65,6 @@ comment_router.register(
     ProjectIssueCommentViewset,
     basename='comments'
 )
-
-# other not nested routers
-router.register('issues', IssueViewset, basename='issues')
-router.register('comments', CommentViewset, basename='comments')
-# router.register('contributors', ContributorViewset, basename='contributors')
 
 
 urlpatterns = [

@@ -1,5 +1,3 @@
-from django.db.models import Q
-
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import get_object_or_404
@@ -23,17 +21,6 @@ class ProjectViewset(ModelViewSet):
         IsOwnerOrReadOnly
     ]
 
-    # def list(self, request):
-    #     queryset = self.get_queryset()
-    #     if queryset==None:
-    #         response_status = status.HTTP_404
-    #     else:
-    #         serializer = ProjectSerializer(queryset, many=True)
-    #         headers = self.get_success_headers(serializer.data)
-    #         response_status = status.HTTP_200_OK
-    #     return Response(serializer.data, status=response_status, headers=headers)
-
-    #
     def retrieve(self, request, pk=None, **kwargs):
         queryset = self.get_queryset()
         project = get_object_or_404(Project.objects.all(), pk=pk)
@@ -63,14 +50,6 @@ class ProjectViewset(ModelViewSet):
         queryset = Project.objects.filter(id__in=project_id_list)
         return queryset
 
-    # def get_object(self):
-    #     owner = get_object_or_404(
-    #         Contributor.objects.filter(
-    #             Q(project_id=self.kwargs['pk']) & Q(permission='AUTHOR')
-    #         )
-    #     )
-    #     return owner
-
     def create(self, request, pk=None, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -78,15 +57,6 @@ class ProjectViewset(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-
-# class IssueViewset(ModelViewSet):
-#
-#     serializer_class = IssueSerializer
-#     # permission_classes = [IsAuthenticated]
-#
-#     def get_queryset(self):
-#         return Issue.objects.all()
 
 
 class ProjectIssueViewset(ModelViewSet):
@@ -129,15 +99,6 @@ class ProjectIssueViewset(ModelViewSet):
         return super().dispatch(request, *args, **kwargs)
 
 
-# class CommentViewset(ModelViewSet):
-#
-#     serializer_class = CommentSerializer
-#     # permission_classes = [IsAuthenticated]
-#
-#     def get_queryset(self):
-#         return Comment.objects.all()
-
-
 class ProjectIssueCommentViewset(ModelViewSet):
     queryset = Comment.objects.all().select_related(
         'issue_id'
@@ -163,9 +124,6 @@ class ProjectIssueCommentViewset(ModelViewSet):
         except Issue.DoesNotExist:
             raise NotFound(f'An issue with id {issue_id} does not exist')
         return self.queryset.filter(issue_id=issue)
-
-    # def get_object(self):
-    #     obj = get_object_or_404()
 
     def dispatch(self, request, *args, **kwargs):
         parent_view = ProjectIssueViewset.as_view({"get": "retrieve"})

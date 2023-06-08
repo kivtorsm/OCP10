@@ -1,8 +1,4 @@
-from rest_framework import status
-from rest_framework.generics import get_object_or_404
-from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, HyperlinkedModelSerializer
-from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
+from rest_framework.serializers import ModelSerializer
 
 from .models import Project, Issue, Comment, Contributor
 
