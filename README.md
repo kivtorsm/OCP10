@@ -10,7 +10,6 @@ Projet OpenClassrooms - Programme développeur d'applications Python
 - Project Issues : get list, create, get detail, update, delete
 - Project Comments : get list, create, get detail, update, delete
 - Project users : get list, create, get detail, update, delete
-- 
 
 ## Installing and running
 
@@ -49,7 +48,7 @@ $ pip install -r requirements.txt
 ### 5. Create database
 - You can use existing example database provided :
 `db.sqlite3`
-- Or you can create a new database. From your terminal or IDLE, from the manage.py location folder, migrate DB:```shell
+- Or you can create a new database. From your terminal or IDLE, from the manage.py location folder, migrate DB:
 ```shell
 $ python manage.py migrate
 ```
